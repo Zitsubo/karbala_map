@@ -56,7 +56,7 @@ def path_distance_calc(graph, path):
                 total_distance += data.get('length', 0) 
         else:
             print(f"No direct edge between {path[i]} and {path[i + 1]}")
-    
+    print(f"Distance from {start} to {stop} is : {total_distance:.2f}m")
     return total_distance
 
 
@@ -171,7 +171,20 @@ def IDDFS(graph, start, goal, max_depth):
 #     else:
 #         return None
 
+def ETA(graph , path):
+    total_distance = path_distance_calc(graph , path)
+    speed = float(input("Whats your average speed? by KM:  "))
+    time_by_seconds = (total_distance / (speed * 1000)) * 3600
+    hours = int((time_by_seconds / 3600))
+    minutes = int((time_by_seconds % 3600) / 60)
+    seconds = int(time_by_seconds % 60)
+    #time = round(time)
+    print(f"The taken time to arrive is {hours:02}:{minutes:02}:{seconds:02}")
+
+
+
 global THE_path
+global start , stop
 global G
 G = ox.graph_from_place("Karbala, Iraq", network_type="drive", simplify=False)
 #print("Edges:", G.edges(data=True))
@@ -225,45 +238,44 @@ start_node = ox.distance.nearest_nodes(G, start_point[1], start_point[0])
 end_node = ox.distance.nearest_nodes(G, end_point[1], end_point[0])
 
 choice_completer = WordCompleter(["yes" , "no"] , ignore_case=True)
-choice = prompt("Map Solved? yes or no? " , completer=choice_completer)
-if choice == "yes":
-    chosen_path = ""
-    while chosen_path == "":
-        path_functions = {
-        'BFS': BFS,
-        'DFS': DFS,
-        'UCS': UCS,
-        'DLS': DLS,
-        'IDDFS': IDDFS,
-        #'BDS' : BDS,
-        'SOLVE': nx.shortest_path(G, start_node, end_node, weight='length') }
-        chosen_path_completer = WordCompleter(path_functions.keys() , ignore_case=True)
-        chosen_path = prompt(" please choose the path that you want. we have \n BFS \n DFS \n UCS \n DLS \n IDDFS \n BDS \n andddddddd WE have THE SOLUTION!!!!! just type solve:   " , completer = chosen_path_completer)
-    i = 0
-    if chosen_path in path_functions:
-        #bfs_paths = nx.single_source_shortest_path(G, start_node)
-        #bfs_path = bfs_paths.get(end_node, None)
-        if chosen_path == 'SOLVE':
-            THE_path = nx.shortest_path(G, start_node, end_node, weight='length')
-        elif (chosen_path == 'DLS'):
-            depth_limit = input("Please enter the depth limit: ")
-            THE_path = path_functions[chosen_path](G , start_node , end_node , int(depth_limit))
-        elif (chosen_path == 'IDDFS'):
-            depth_limit = input("Please enter the depth limit: ")
-            THE_path = path_functions[chosen_path](G , start_node , end_node , int(depth_limit))
-       # elif (chosen_path != path_functions['DLS'] and chosen_path != path_functions['IDDFS']):
-            
-        else:
-            THE_path = path_functions[chosen_path](G , start_node , end_node)
-            
-        # Find the path section
-        # shortest_path = nx.shortest_path(G, start_node, end_node, weight="length")
-        if THE_path:
-            #path_distance = nx.shortest_path_length(G, start_node, end_node, weight="length")
-            path_distance = path_distance_calc( G , THE_path)
-            #print(f"the length of path is {len(THE_path)} and the length of the graph is is {len(G)}")   # for debugging fuck
-            print(f"Distance from start to end node: {path_distance:.2f} meters")
-            # Plot the route
+
+chosen_path = ""
+while chosen_path == "":
+    path_functions = {
+    'BFS': BFS,
+    'DFS': DFS,
+    'UCS': UCS,
+    'DLS': DLS,
+    'IDDFS': IDDFS,
+    #'BDS' : BDS,
+    'SOLVE': nx.shortest_path(G, start_node, end_node, weight='length') }
+    chosen_path_completer = WordCompleter(path_functions.keys() , ignore_case=True)
+    chosen_path = prompt(" please choose the path that you want. we have \n BFS \n DFS \n UCS \n DLS \n IDDFS \n BDS \n andddddddd WE have THE SOLUTION!!!!! just type solve:   " , completer = chosen_path_completer)
+i = 0
+if chosen_path in path_functions:
+    #bfs_paths = nx.single_source_shortest_path(G, start_node)
+    #bfs_path = bfs_paths.get(end_node, None)
+    if chosen_path == 'SOLVE':
+        THE_path = nx.shortest_path(G, start_node, end_node, weight='length')
+    elif (chosen_path == 'DLS'):
+        depth_limit = input("Please enter the depth limit: ")
+        THE_path = path_functions[chosen_path](G , start_node , end_node , int(depth_limit))
+    elif (chosen_path == 'IDDFS'):
+        depth_limit = input("Please enter the depth limit: ")
+        THE_path = path_functions[chosen_path](G , start_node , end_node , int(depth_limit))
+    # elif (chosen_path != path_functions['DLS'] and chosen_path != path_functions['IDDFS']):
+        
+    else:
+        THE_path = path_functions[chosen_path](G , start_node , end_node)
+        
+    # Find the path section
+    # shortest_path = nx.shortest_path(G, start_node, end_node, weight="length")
+if THE_path:
+    #path_distance = nx.shortest_path_length(G, start_node, end_node, weight="length")
+    path_distance = path_distance_calc( G , THE_path)
+    #print(f"the length of path is {len(THE_path)} and the length of the graph is is {len(G)}")   # for debugging fuck
+    #print(f"Distance from start to end node: {path_distance:.2f} meters")
+    ETA(G , THE_path)
 #idk really know why this dont work ↓
 #fig, ax = ox.plot_graph_route(G, bfs_path, route_linewidth=2, node_size=0, bgcolor="white")
 fig, ax = plt.subplots(figsize=(12, 12))
@@ -271,33 +283,21 @@ fig, ax = plt.subplots(figsize=(12, 12))
 ox.plot_graph(G, ax=ax, node_size=0, edge_linewidth=0.5, bgcolor="white", show=False, close=False)
 
                                              # route plot
-if choice == 'yes':
-    ox.plot_graph_route(G, THE_path , route_linewidth=1, node_size=-5, ax=ax, route_alpha=0.7, show=False, close=False)
+ox.plot_graph_route(G, THE_path , route_linewidth=1, node_size=-5, ax=ax, route_alpha=0.7, show=False, close=False)
 
-# Add markers for each known place
 for place, (lat, lon) in places.items():
-    # Find the nearest node to each known place
     node = ox.distance.nearest_nodes(G, lon, lat)
     x, y = G.nodes[node]['x'], G.nodes[node]['y']
-    
-    # Plot a marker at each known place
     ax.plot(x, y, 'o', color='black', markersize=5, zorder=5)
     ax.text(x + 0.001, y, place, fontsize=7, color='darkred', fontstyle = "italic" , fontfamily = 'serif' ,  ha='left', zorder=9)
 
-if choice == 'yes':
-    arrow = prompt("Add arrow indicator for the way(messy) : yes or no? ", completer=choice_completer)
-    if arrow == 'yes':
-        for i in range(len(THE_path) - 1):
-            u = THE_path[i]
-            v = THE_path[i + 1]
-            
-            # Get coordinates for the start and end node of the edge
-            x_start, y_start = G.nodes[u]['x'], G.nodes[u]['y']
-            x_end, y_end = G.nodes[v]['x'], G.nodes[v]['y']
-        
-        # Add an arrow using annotate
-        ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start), arrowprops=dict(facecolor='black', edgecolor='black', arrowstyle='->', lw=0.30))
+for i in range(len(THE_path) - 1):
+    u = THE_path[i]
+    v = THE_path[i + 1]
+    x_start, y_start = G.nodes[u]['x'], G.nodes[u]['y']
+    x_end, y_end = G.nodes[v]['x'], G.nodes[v]['y']
+    ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start), arrowprops=dict(facecolor='black', edgecolor='black', arrowstyle='->', lw=0.30))
 
 plt.show()
-if choice == 'yes' and not THE_path :
+if  not THE_path :
     print(f"No path found from start to end node using {chosen_path}.")   
