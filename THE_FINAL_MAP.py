@@ -19,7 +19,7 @@ def BFS(graph, start, goal):
             #print(len(path))
             return path
         adjacent_nodes = graph[node]
-        print(adjacent_nodes)
+        #print(adjacent_nodes)
         for node2 in adjacent_nodes:
             new_path = path.copy()
             new_path.append(node2)
@@ -64,14 +64,12 @@ def path_distance_calc(graph, path):
 import heapq
 
 def UCS(graph, start, goal):
-    # Priority queue for UCS (min-heap)
     queue = []
-    # Push the start node into the queue with 0 cost
-    heapq.heappush(queue, (0, start, [start]))  # (cost, node, path)
+    heapq.heappush(queue, (0, start, [start])) # (cost, node, path)
     visited = set()
 
     while queue:
-        cost, node, path = heapq.heappop(queue)  # Pop the node with the least cost
+        cost, node, path = heapq.heappop(queue)  
 
         if node in visited:
             continue
@@ -79,22 +77,19 @@ def UCS(graph, start, goal):
         visited.add(node)
 
         if node == goal:
-            return path  # Return the path to the goal as a list of node IDs
-
-        # Explore neighbors
+            return path  
         for neighbor, data in graph[node].items():
-            # Check if the edge exists
             if neighbor in graph[node]:
-                edge_cost = data.get('weight', 1)  # Default weight is 1 if no weight is provided
+                edge_cost = data.get('length', 1)  
                 if neighbor not in visited:
                     new_cost = cost + edge_cost
-                    new_path = path + [neighbor]  # Append only the node ID
-                    heapq.heappush(queue, (new_cost, neighbor, new_path))  # Push the new path with updated cost
+                    new_path = path + [neighbor] 
+                    heapq.heappush(queue, (new_cost, neighbor, new_path))  
 
-    return None  # Return None if no path is found
+        return None 
 
 
-    return None  # Return None if no path is found
+    return None
                 
 def DLS(graph, start, goal, limit):
     def recursive_dls(node, goal, path, depth):
@@ -107,11 +102,10 @@ def DLS(graph, start, goal, limit):
             return None
 
         for neighbor in graph[node]:
-            if neighbor not in path:  # Avoid cycles by checking if neighbor is already in path
+            if neighbor not in path:
                 result = recursive_dls(neighbor, goal, path, depth + 1)
                 if result is not None:
-                    return result  # Goal found in this path
-          # Backtrack if goal is not found at this depth
+                    return result 
         path.pop()
         return None
     return recursive_dls(start, goal, [], 0)
@@ -123,50 +117,52 @@ def IDDFS(graph, start, goal, max_depth):
             return path
     return None
 
-def BDS(graph, start, goal, method="BFS"):
-    forward_frontier = [[start]]
-    backward_frontier = [[goal]]
-    forward_visited = {start: [start]}
-    backward_visited = {goal: [goal]}
+# def BDS(graph, start, goal, method="BFS"):       
+#     forward_frontier = [[start]]
+#     backward_frontier = [[goal]]
+#     forward_visited = {start: [start]}
+#     backward_visited = {goal: [goal]}
     
-    while forward_frontier and backward_frontier:
-        # Expand forward
-        if method == "BFS":
-            forward_path = forward_frontier.pop(0)  # FIFO for BFS
-        else:
-            forward_path = forward_frontier.pop()  # LIFO for DFS
+#     while forward_frontier and backward_frontier:
+#         # Expand forward
+#         if method == "BFS":
+#             forward_path = forward_frontier.pop(0)
+#         else:
+#             forward_path = forward_frontier.pop()
             
-        forward_node = forward_path[-1]
+#         forward_node = forward_path[-1]
         
-        for neighbor in graph[forward_node]:
-            if neighbor not in forward_visited:
-                new_path = forward_path + [neighbor]  # Extend the path
-                forward_frontier.append(new_path)
-                forward_visited[neighbor] = new_path  # Track full path
+#         for neighbor in graph[forward_node]:
+#             if neighbor not in forward_visited:
+#                 new_path = forward_path + [neighbor] 
+#                 forward_frontier.append(new_path)
+#                 forward_visited[neighbor] = new_path 
                 
-                if neighbor in backward_visited:
-                    # Combine paths, ensuring the common node is not duplicated
-                    return forward_visited[neighbor] + backward_visited[neighbor][::-1][1:]
+#                 if neighbor in backward_visited:
+#                     return forward_visited[neighbor] + backward_visited[neighbor][::-1][1:]
 
-        # Expand backward
-        if method == "BFS":
-            backward_path = backward_frontier.pop(0)  # FIFO for BFS
-        else:
-            backward_path = backward_frontier.pop()  # LIFO for DFS
+#         # Expand backward
+#         if method == "BFS":
+#             backward_path = backward_frontier.pop(0)
+#         else:
+#             backward_path = backward_frontier.pop() 
             
-        backward_node = backward_path[-1]
+#         backward_node = backward_path[-1]
         
-        for neighbor in graph[backward_node]:
-            if neighbor not in backward_visited:
-                new_path = backward_path + [neighbor]  # Extend the path
-                backward_frontier.append(new_path)
-                backward_visited[neighbor] = new_path  # Track full path
+#         for neighbor in graph[backward_node]:                 #not mine so not working till i make one by myself
+#             if neighbor not in backward_visited:
+#                 new_path = backward_path + [neighbor]  
+#                 backward_frontier.append(new_path)
+#                 backward_visited[neighbor] = new_path 
                 
-                if neighbor in forward_visited:
-                    # Combine paths, ensuring the common node is not duplicated
-                    return forward_visited[neighbor] + backward_visited[neighbor][::-1][1:]
+#                 if neighbor in forward_visited:
+                    
+#                     return forward_visited[neighbor] + backward_visited[neighbor][::-1][1:]
 
-    return []  # Return empty if no path is found
+#     return []  # Return empty if no path is found
+
+
+
 #tab completion function
 # def completer(text, state):
 #     matches = [place for place in places if place.lower().startswith(text.lower())]
@@ -217,18 +213,17 @@ places = {
 }
 #readline.set_completer(completer)
 # readline.parse_and_bind("tab: complete")          require readline lib
+
 places_completer = WordCompleter(places.keys(), ignore_case=True)
 start = prompt("Where do you start? ", completer=places_completer)
 stop = prompt("Where do you stop? ", completer=places_completer)
 
-# start and end 
 start_point = places[start]
 end_point = places[stop]
 
-# Find the nearest nodes to the start and end points
 start_node = ox.distance.nearest_nodes(G, start_point[1], start_point[0])
 end_node = ox.distance.nearest_nodes(G, end_point[1], end_point[0])
-#
+
 choice_completer = WordCompleter(["yes" , "no"] , ignore_case=True)
 choice = prompt("Map Solved? yes or no? " , completer=choice_completer)
 if choice == "yes":
@@ -240,7 +235,7 @@ if choice == "yes":
         'UCS': UCS,
         'DLS': DLS,
         'IDDFS': IDDFS,
-        'BDS' : BDS,
+        #'BDS' : BDS,
         'SOLVE': nx.shortest_path(G, start_node, end_node, weight='length') }
         chosen_path_completer = WordCompleter(path_functions.keys() , ignore_case=True)
         chosen_path = prompt(" please choose the path that you want. we have \n BFS \n DFS \n UCS \n DLS \n IDDFS \n BDS \n andddddddd WE have THE SOLUTION!!!!! just type solve:   " , completer = chosen_path_completer)
@@ -275,7 +270,7 @@ fig, ax = plt.subplots(figsize=(12, 12))
 # Plot the graph of the road network onto the axis
 ox.plot_graph(G, ax=ax, node_size=0, edge_linewidth=0.5, bgcolor="white", show=False, close=False)
 
-# Plot the route on top of the graph
+                                             # route plot
 if choice == 'yes':
     ox.plot_graph_route(G, THE_path , route_linewidth=1, node_size=-5, ax=ax, route_alpha=0.7, show=False, close=False)
 
@@ -289,8 +284,6 @@ for place, (lat, lon) in places.items():
     ax.plot(x, y, 'o', color='black', markersize=5, zorder=5)
     ax.text(x + 0.001, y, place, fontsize=7, color='darkred', fontstyle = "italic" , fontfamily = 'serif' ,  ha='left', zorder=9)
 
-# Show the plot with all layers combined
-# After plotting the graph and path
 if choice == 'yes':
     arrow = prompt("Add arrow indicator for the way(messy) : yes or no? ", completer=choice_completer)
     if arrow == 'yes':
