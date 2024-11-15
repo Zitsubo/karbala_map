@@ -166,7 +166,7 @@ def IDDFS(graph, start, goal, max_depth):
 #tab completion function
 # def completer(text, state):
 #     matches = [place for place in places if place.lower().startswith(text.lower())]
-#     if state < len(matches):              does not work in spyder
+#     if state < len(matches):              does not work in spyder and its bad af
 #         return matches[state]
 #     else:
 #         return None
@@ -179,7 +179,7 @@ def ETA(graph , path):
     minutes = int((time_by_seconds % 3600) / 60)
     seconds = int(time_by_seconds % 60)
     #time = round(time)
-    print(f"The taken time to arrive is {hours:02}:{minutes:02}:{seconds:02}")
+    print(f"The Eastimated time to arrive is {hours:02}:{minutes:02}:{seconds:02}")
 
 
 
