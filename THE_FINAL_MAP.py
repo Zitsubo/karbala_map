@@ -81,6 +81,7 @@ def UCS(graph, start, goal):
         for neighbor, data in graph[node].items():
             if neighbor in graph[node]:
                 edge_cost = data.get('length', 1)  
+                #print(edge_cost)
                 if neighbor not in visited:
                     new_cost = cost + edge_cost
                     new_path = path + [neighbor] 
