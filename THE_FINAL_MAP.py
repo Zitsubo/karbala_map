@@ -55,7 +55,7 @@ def path_distance_calc(graph, path):
             for _, data in edge_data.items():
                 total_distance += data.get('length', 0) 
         else:
-            print(f"No direct edge between {path[i]} and {path[i + 1]}")
+            pass#print(f"No direct edge between {path[i]} and {path[i + 1]}")
     print(f"Distance from {start} to {stop} is : {total_distance:.2f}m")
     return total_distance
 
@@ -211,7 +211,7 @@ places = {
     "Al Nasar" : [32.577294,44.006423],
     "The Doctors neighborhood" : [32.584790, 43.999386],
     "Al Senaaie" : [32.577215, 44.047531],
-    "Al Chaier" : [32.507188, 44.043860],
+    "Al Chaier" : [32.597420, 44.041025],
     "Al Abbas" : [32.636017, 44.049627],
     "Al Hur" : [32.650316, 43.985929],
     "The Small Hur" : [32.653217,43.999199],
@@ -253,6 +253,7 @@ while chosen_path == "":
     chosen_path_completer = WordCompleter(path_functions.keys() , ignore_case=True)
     chosen_path = prompt(" please choose the path that you want. we have \n BFS \n DFS \n UCS \n DLS \n IDDFS \n BDS \n andddddddd WE have THE SOLUTION!!!!! just type solve:   " , completer = chosen_path_completer)
 i = 0
+global THE_path
 if chosen_path in path_functions:
     #bfs_paths = nx.single_source_shortest_path(G, start_node)
     #bfs_path = bfs_paths.get(end_node, None)
@@ -262,8 +263,8 @@ if chosen_path in path_functions:
         depth_limit = input("Please enter the depth limit: ")
         THE_path = path_functions[chosen_path](G , start_node , end_node , int(depth_limit))
     elif (chosen_path == 'IDDFS'):
-        depth_limit = input("Please enter the depth limit: ")
-        THE_path = path_functions[chosen_path](G , start_node , end_node , int(depth_limit))
+        max_depth = input("Please enter the max depth: ")
+        THE_path = path_functions[chosen_path](G , start_node , end_node , int(max_depth))
     # elif (chosen_path != path_functions['DLS'] and chosen_path != path_functions['IDDFS']):
         
     else:
@@ -279,26 +280,27 @@ if THE_path:
     ETA(G , THE_path)
 #idk really know why this dont work ↓
 #fig, ax = ox.plot_graph_route(G, bfs_path, route_linewidth=2, node_size=0, bgcolor="white")
-fig, ax = plt.subplots(figsize=(12, 12))
+    fig, ax = plt.subplots(figsize=(12, 12))
 # Plot the graph of the road network onto the axis
-ox.plot_graph(G, ax=ax, node_size=0, edge_linewidth=0.5, bgcolor="white", show=False, close=False)
+    ox.plot_graph(G, ax=ax, node_size=0, edge_linewidth=0.5, bgcolor="white", show=False, close=False)
 
                                              # route plot
-ox.plot_graph_route(G, THE_path , route_linewidth=1, node_size=-5, ax=ax, route_alpha=0.7, show=False, close=False)
+    ox.plot_graph_route(G, THE_path , route_linewidth=1, node_size=-5, ax=ax, route_alpha=0.7, show=False, close=False)
 
-for place, (lat, lon) in places.items():
-    node = ox.distance.nearest_nodes(G, lon, lat)
-    x, y = G.nodes[node]['x'], G.nodes[node]['y']
-    ax.plot(x, y, 'o', color='black', markersize=5, zorder=5)
-    ax.text(x + 0.001, y, place, fontsize=7, color='darkred', fontstyle = "italic" , fontfamily = 'serif' ,  ha='left', zorder=9)
+    for place, (lat, lon) in places.items():
+        node = ox.distance.nearest_nodes(G, lon, lat)
+        x, y = G.nodes[node]['x'], G.nodes[node]['y']
+        ax.plot(x, y, 'o', color='black', markersize=5, zorder=5)
+        ax.text(x + 0.001, y, place, fontsize=7, color='darkred', fontstyle = "italic" , fontfamily = 'serif' ,  ha='left', zorder=9)
 
-for i in range(len(THE_path) - 1):
-    u = THE_path[i]
-    v = THE_path[i + 1]
-    x_start, y_start = G.nodes[u]['x'], G.nodes[u]['y']
-    x_end, y_end = G.nodes[v]['x'], G.nodes[v]['y']
-    ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start), arrowprops=dict(facecolor='black', edgecolor='black', arrowstyle='->', lw=0.30))
-
-plt.show()
-if  not THE_path :
-    print(f"No path found from start to end node using {chosen_path}.")   
+    for i in range(len(THE_path) - 1):
+        u = THE_path[i]
+        v = THE_path[i + 1]
+        x_start, y_start = G.nodes[u]['x'], G.nodes[u]['y']
+        x_end, y_end = G.nodes[v]['x'], G.nodes[v]['y']
+        ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start), arrowprops=dict(facecolor='black', edgecolor='black', arrowstyle='->', lw=0.30))
+    #plt.savefig("karbala.svg" , format = "svg")
+    plt.show()
+if not THE_path:
+    print(f"No path found from {start} to {stop} using {chosen_path}.")
+    exit(1)
