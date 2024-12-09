@@ -295,6 +295,8 @@ if THE_path:
         ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start), arrowprops=dict(facecolor='black', edgecolor='black', arrowstyle='->', lw=0.30))
     #plt.savefig("karbala.svg" , format = "svg")
     plt.show()
+    plt.savefig("Karbala-map.pdf" , format = "pdf",
+    dpi = 1200 , bbox = "tight")
 if not THE_path:
     print(f"No path found from {start} to {stop} using {chosen_path}.")
     exit(1)
