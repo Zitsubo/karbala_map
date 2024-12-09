@@ -41,15 +41,15 @@ def DFS(graph, start, goal):
             stack.append(new_path)
 def path_cost(path):
     total_cost = 0
-    for (node, cost) in path:
-        total_cost += cost
+    
+    total_cost += cost
     return total_cost, path[-1][0]
 
 
 def path_distance_calc(graph, path):
     total_distance = 0
     for i in range(len(path) - 1):
-        edge_data = graph.get_edge_data(path[i], path[i + 1])
+        edge_data = graph.get_edge_data(path[i] ,path[i + 1])
         
         if edge_data:
             for _, data in edge_data.items():
@@ -58,39 +58,33 @@ def path_distance_calc(graph, path):
             pass#print(f"No direct edge between {path[i]} and {path[i + 1]}")
     print(f"Distance from {start} to {stop} is : {total_distance:.2f}m")
     return total_distance
-
-
-
 import heapq
-
 def UCS(graph, start, goal):
     queue = []
-    heapq.heappush(queue, (0, start, [start])) # (cost, node, path)
+    heapq.heappush(queue, (0, [start]))
     visited = set()
-
     while queue:
-        cost, node, path = heapq.heappop(queue)  
-
+        current_cost, path = heapq.heappop(queue)
+        node = path[-1]
         if node in visited:
             continue
-
         visited.add(node)
-
         if node == goal:
-            return path  
-        for neighbor, data in graph[node].items():
-            if neighbor in graph[node]:
-                edge_cost = data.get('length', 1)  
-                #print(edge_cost)
-                if neighbor not in visited:
-                    new_cost = cost + edge_cost
-                    new_path = path + [neighbor] 
-                    heapq.heappush(queue, (new_cost, neighbor, new_path))  
-
-        return None 
-
-
+            return path
+        
+        for neighbor in graph.neighbors(node):
+            if neighbor not in visited:
+                edge_data = graph.get_edge_data(node, neighbor)
+                cost = edge_data[0].get('length', 0)
+                new_path = path + [neighbor]
+                new_cost = current_cost + cost
+                heapq.heappush(queue, (new_cost, new_path))
+    
     return None
+
+
+
+
                 
 def DLS(graph, start, goal, limit):
     def recursive_dls(node, goal, path, depth):
