@@ -16,7 +16,6 @@ def BFS(graph, start, goal):
         else:
             continue
         if node == goal:
-            #print(len(path))
             return path
         adjacent_nodes = graph[node]
         #print(adjacent_nodes)
@@ -40,10 +39,10 @@ def DFS(graph, start, goal):
             new_path = path + [node2]
             stack.append(new_path)
 def path_cost(path):
-    total_cost = 0
-    
-    total_cost += cost
-    return total_cost, path[-1][0]
+    total_cost=0
+    for(node,cost) in path:    #for shitty ass simple code only
+        total_cost +=cost
+    return total_cost,path[-1][0]
 
 
 def path_distance_calc(graph, path):
@@ -174,14 +173,18 @@ def ETA(graph , path):
     minutes = int((time_by_seconds % 3600) / 60)
     seconds = int(time_by_seconds % 60)
     #time = round(time)
+    time = f"{hours:02}:{minutes:02}:{seconds:02}"
     print(f"The Eastimated time to arrive is {hours:02}:{minutes:02}:{seconds:02}")
-
+    return time
 
 
 global THE_path
 global start , stop
 global G
 G = ox.graph_from_place("Karbala, Iraq", network_type="drive", simplify=False)
+print(len(G))
+G = ox.simplification.simplify_graph(G)
+print(len(G))
 #print("Edges:", G.edges(data=True))
 
 #                  (latitude, longitude)
@@ -271,7 +274,7 @@ if THE_path:
     path_distance = path_distance_calc( G , THE_path)
     #print(f"the length of path is {len(THE_path)} and the length of the graph is is {len(G)}")   # for debugging fuck
     #print(f"Distance from start to end node: {path_distance:.2f} meters")
-    ETA(G , THE_path)
+    time = ETA(G , THE_path)
 #idk really know why this dont work ↓
 #fig, ax = ox.plot_graph_route(G, bfs_path, route_linewidth=2, node_size=0, bgcolor="white")
     fig, ax = plt.subplots(figsize=(12, 12))
@@ -294,9 +297,19 @@ if THE_path:
         x_end, y_end = G.nodes[v]['x'], G.nodes[v]['y']
         ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start), arrowprops=dict(facecolor='black', edgecolor='black', arrowstyle='->', lw=0.30))
     #plt.savefig("karbala.svg" , format = "svg")
+    #plt.plot(label = "Start = {start} Goal = {stop}")
+    plt.figtext(
+    0.05, 0.95,  # Position in figure coordinates
+    f"Start is {start}\nGoal is {stop}\nDistance is {path_distance:.2f}m\n ETA is {time}\n",  # Text content
+    fontsize=12,
+    color="Black",
+    # fontweight="bold",
+    fontfamily="sans-serif",
+    ha="left",
+    va="top")
     plt.show()
-    plt.savefig("Karbala-map.pdf" , format = "pdf",
-    dpi = 1200 , bbox = "tight")
+    plt.savefig("Karbala-map.png" , format = "png",
+    dpi = 600 )
 if not THE_path:
     print(f"No path found from {start} to {stop} using {chosen_path}.")
     exit(1)
