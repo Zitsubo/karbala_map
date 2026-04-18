@@ -113,15 +113,18 @@ def index():
             if stop == "custom":
                 folium.Marker(end_point, popup="Custom Stop", tooltip="Custom Stop", icon=folium.Icon(color="red")).add_to(m)
 
+            start_name = "موقع مخصص" if start == "custom" else start
+            stop_name = "موقع مخصص" if stop == "custom" else stop
+
             html_text = f"""
             <div style="position: fixed;
-                        bottom: 50px; left: 50px; width: 350px; height: 160px;
-                        background-color: white; border:2px solid black; z-index:9999; font-size:16px;
-                        font-family: serif; font-weight: bold; padding: 10px;">
-                <p>Start is {start}</p>
-                <p>Goal is {stop}</p>
-                <p>Distance is {path_distance:.2f}m</p>
-                <p>ETA is {time}</p>
+                        top: 20px; right: 20px; width: auto; max-width: 250px; height: auto;
+                        background-color: rgba(255, 255, 255, 0.95); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index:9999; font-size: 13px;
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 15px; direction: rtl;">
+                <p style="margin: 0 0 5px 0;"><b>من:</b> {start_name}</p>
+                <p style="margin: 0 0 5px 0;"><b>إلى:</b> {stop_name}</p>
+                <p style="margin: 0 0 5px 0; color: #005ab2;"><b>المسافة:</b> {path_distance:.2f} م</p>
+                <p style="margin: 0;"><b>الوقت المقدر:</b> {time}</p>
             </div>
             """
             m.get_root().html.add_child(folium.Element(html_text))
