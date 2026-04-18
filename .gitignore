@@ -1,5 +1,5 @@
-*.html
 test_map.py
 input.txt
 __pycache__/
 cache/
+Karbala-map.html
