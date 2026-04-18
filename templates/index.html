@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>خريطة كربلاء التفاعلية</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -51,6 +53,13 @@
         button:hover {
             background-color: #218838;
         }
+        #picker-map {
+            width: 100%;
+            height: 300px;
+            border-radius: 4px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
         .map-container {
             margin-top: 30px;
             width: 100%;
@@ -72,10 +81,11 @@
 
     <h1>خريطة كربلاء التفاعلية</h1>
 
-    <form method="POST" action="/">
+    <form method="POST" action="/" id="map-form">
         <label for="start">نقطة البداية (Start):</label>
         <select name="start" id="start" required>
-            <option value="" disabled selected>اختر نقطة البداية...</option>
+            <option value="" disabled {% if not start %}selected{% endif %}>اختر نقطة البداية...</option>
+            <option value="custom" {% if start == "custom" %}selected{% endif %}>موقع مخصص (Custom Location)</option>
             {% for p in places %}
                 <option value="{{ p }}" {% if start == p %}selected{% endif %}>{{ p }}</option>
             {% endfor %}
@@ -83,28 +93,22 @@
 
         <label for="stop">نقطة النهاية (Stop):</label>
         <select name="stop" id="stop" required>
-            <option value="" disabled selected>اختر نقطة النهاية...</option>
+            <option value="" disabled {% if not stop %}selected{% endif %}>اختر نقطة النهاية...</option>
+            <option value="custom" {% if stop == "custom" %}selected{% endif %}>موقع مخصص (Custom Location)</option>
             {% for p in places %}
                 <option value="{{ p }}" {% if stop == p %}selected{% endif %}>{{ p }}</option>
             {% endfor %}
         </select>
 
-        <label for="algorithm">الخوارزمية (Algorithm):</label>
-        <select name="algorithm" id="algorithm" required>
-            <option value="" disabled selected>اختر الخوارزمية...</option>
-            {% for a in algorithms %}
-                <option value="{{ a }}" {% if algorithm == a %}selected{% endif %}>{{ a }}</option>
-            {% endfor %}
-        </select>
+        <div id="picker-map"></div>
+
+        <input type="hidden" name="start_lat" id="start_lat" value="">
+        <input type="hidden" name="start_lon" id="start_lon" value="">
+        <input type="hidden" name="stop_lat" id="stop_lat" value="">
+        <input type="hidden" name="stop_lon" id="stop_lon" value="">
 
         <label for="speed">السرعة كم/ساعة (Speed km/h):</label>
         <input type="number" name="speed" id="speed" value="{{ speed if speed else 50 }}" min="1" required>
-
-        <label for="limit">الحد (Limit - لـ DLS فقط):</label>
-        <input type="number" name="limit" id="limit" value="0" min="0">
-
-        <label for="max_depth">العمق الأقصى (Max Depth - لـ IDDFS فقط):</label>
-        <input type="number" name="max_depth" id="max_depth" value="0" min="0">
 
         <button type="submit">ارسم الخريطة (Draw Map)</button>
     </form>
@@ -119,5 +123,75 @@
         </div>
     {% endif %}
 
+    <script>
+        const places = {{ places_json | safe }};
+        const defaultCenter = [32.6160, 44.0316]; // Karbala Center
+
+        const map = L.map('picker-map').setView(defaultCenter, 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        }).addTo(map);
+
+        const startIcon = new L.Icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+          iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+
+        const stopIcon = new L.Icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+          iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+
+        let startMarker = L.marker(defaultCenter, {draggable: true, icon: startIcon}).addTo(map).bindPopup("Start (نقطة البداية)");
+        let stopMarker = L.marker([defaultCenter[0] + 0.01, defaultCenter[1] + 0.01], {draggable: true, icon: stopIcon}).addTo(map).bindPopup("Stop (نقطة النهاية)");
+
+        function updateHiddenInputs() {
+            document.getElementById('start_lat').value = startMarker.getLatLng().lat;
+            document.getElementById('start_lon').value = startMarker.getLatLng().lng;
+            document.getElementById('stop_lat').value = stopMarker.getLatLng().lat;
+            document.getElementById('stop_lon').value = stopMarker.getLatLng().lng;
+        }
+
+        startMarker.on('dragend', function(e) {
+            document.getElementById('start').value = 'custom';
+            updateHiddenInputs();
+        });
+
+        stopMarker.on('dragend', function(e) {
+            document.getElementById('stop').value = 'custom';
+            updateHiddenInputs();
+        });
+
+        document.getElementById('start').addEventListener('change', function(e) {
+            const val = e.target.value;
+            if (val !== 'custom' && places[val]) {
+                const latlng = places[val];
+                startMarker.setLatLng(latlng);
+                map.panTo(latlng);
+            }
+            updateHiddenInputs();
+        });
+
+        document.getElementById('stop').addEventListener('change', function(e) {
+            const val = e.target.value;
+            if (val !== 'custom' && places[val]) {
+                const latlng = places[val];
+                stopMarker.setLatLng(latlng);
+                map.panTo(latlng);
+            }
+            updateHiddenInputs();
+        });
+
+        // initial sync if values exist
+        if(document.getElementById('start').value !== "" && document.getElementById('start').value !== "custom") {
+            startMarker.setLatLng(places[document.getElementById('start').value]);
+        }
+        if(document.getElementById('stop').value !== "" && document.getElementById('stop').value !== "custom") {
+            stopMarker.setLatLng(places[document.getElementById('stop').value]);
+        }
+        updateHiddenInputs();
+    </script>
 </body>
 </html>

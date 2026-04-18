@@ -2,16 +2,9 @@ from flask import Flask, render_template, request, render_template_string
 import osmnx as ox
 import networkx as nx
 import folium
-import heapq
-import os
+import json
 
 app = Flask(__name__)
-
-# Global variables setup
-global depth_of_the_search
-depth_of_the_search = 0
-limit = 0 
-max_depth = 0
 
 print("Loading graph...")
 G = ox.graph_from_place("Karbala, Iraq", network_type="drive", simplify=False)
@@ -47,111 +40,14 @@ places = {
     "Karbala Stadium" : [32.565359, 44.004452],
 }
 
-algorithms = ["BFS" , "DFS" , "UCS" , "Greedy" , "A*" , "DLS" , "IDDFS" , "Magic Algorithm"]
-
-def DLS(graph, start, goal , limit):
-    def recursive_dls(node, goal, path, depth):
-        if node in path:
-            return None
-        path.append(node)
-        if node == goal:
-            return path
-        if depth >= limit:
-            path.pop()
-            return None
-
-        for neighbor in graph[node]:
-            if neighbor not in path:
-                result = recursive_dls(neighbor, goal, path, depth + 1)
-                if result is not None:
-                    return result
-        path.pop()
-        return None
-    return recursive_dls(start, goal, [], 0)
-
-def IDDFS(graph, start, goal , max_depth):
-    for depth in range(max_depth + 1):
-        path = DLS(graph, start, goal, depth)
-        if path is not None:
-            return path
-    return None
-
-def TheAlgorithms(algorithm, graph, start, goal, limit_val=0, max_depth_val=0):
-    global depth_of_the_search
-    depth_of_the_search = 0
-    if algorithm == "DLS":
-        global limit
-        limit = limit_val
-        return DLS(graph , start , goal , limit)
-    elif algorithm == "IDDFS":
-        global max_depth
-        max_depth = max_depth_val
-        return IDDFS(graph , start , goal , max_depth)
-    if algorithm == "Magic Algorithm":
-        return (nx.shortest_path(G, start, goal, weight='length'))
-    elif algorithm in ["BFS", "DFS"]:
-        visited = []
-        queue = [[start]]
-    elif algorithm in ["UCS", "A*", "Greedy"]:
-        queue = []
-        heapq.heappush(queue, (0, [start]))
-        visited = set()
-
-    if algorithm in ["UCS", "A*", "Greedy"]:
-        while queue:
-            current_cost, path = heapq.heappop(queue)
-            node = path[-1]
-            if node in visited:
-                continue
-            visited.add(node)
-            if node == goal:
-                return path
-            depth_of_the_search+=1
-            for neighbor in graph.neighbors(node):
-                if neighbor not in visited:
-                    edge_data = graph.get_edge_data(node, neighbor)
-                    cost = edge_data[0].get('length', 0)
-                    if algorithm == "A*":
-                        heuristic = ox.distance.euclidean(graph.nodes[neighbor]['y'], graph.nodes[neighbor]['x'],
-                                                         graph.nodes[goal]['y'], graph.nodes[goal]['x'])
-                        new_cost = current_cost + cost + heuristic
-                    elif algorithm == "Greedy":
-                        new_cost = ox.distance.euclidean(graph.nodes[neighbor]['y'], graph.nodes[neighbor]['x'],
-                                                         graph.nodes[goal]['y'], graph.nodes[goal]['x'])
-                    else:
-                        new_cost = current_cost + cost
-                    new_path = path + [neighbor]
-                    heapq.heappush(queue, (new_cost, new_path))
-
-    if algorithm in ["BFS", "DFS"]:
-        while queue:
-            if algorithm == "BFS":
-                path = queue.pop(0)
-                node = path[-1]
-            elif algorithm == "DFS":
-                path = queue.pop()
-                node = path[-1]
-            if node not in visited:
-                visited.append(node)
-            else:
-                continue
-            if node == goal:
-                return path
-            depth_of_the_search+=1
-            for neighbor in graph[node]:
-                new_path = path.copy()
-                new_path.append(neighbor)
-                queue.append(new_path)
-    return None
-
 def path_distance_calc(graph, path):
     total_distance = 0
     for i in range(len(path) - 1):
         edge_data = graph.get_edge_data(path[i] ,path[i + 1])
-        
+
         if edge_data:
             for _, data in edge_data.items():
-                total_distance += data.get('length', 0) 
+                total_distance += data.get('length', 0)
     return total_distance
 
 def ETA(graph, path, speed):
@@ -167,20 +63,27 @@ def ETA(graph, path, speed):
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    places_json = json.dumps(places)
     if request.method == "POST":
         start = request.form.get("start")
         stop = request.form.get("stop")
-        algorithm = request.form.get("algorithm")
         speed = float(request.form.get("speed") or 50)
-        limit_val = int(request.form.get("limit") or 0)
-        max_depth_val = int(request.form.get("max_depth") or 0)
 
-        start_point = places[start]
-        end_point = places[stop]
+        start_lat = float(request.form.get("start_lat"))
+        start_lon = float(request.form.get("start_lon"))
+        stop_lat = float(request.form.get("stop_lat"))
+        stop_lon = float(request.form.get("stop_lon"))
+
+        start_point = [start_lat, start_lon]
+        end_point = [stop_lat, stop_lon]
+
         start_node = ox.distance.nearest_nodes(G, start_point[1], start_point[0])
         end_node = ox.distance.nearest_nodes(G, end_point[1], end_point[0])
 
-        THE_path = TheAlgorithms(algorithm , G , start_node , end_node, limit_val, max_depth_val)
+        try:
+            THE_path = nx.shortest_path(G, start_node, end_node, weight='length')
+        except nx.NetworkXNoPath:
+            THE_path = None
 
         if THE_path:
             path_distance = path_distance_calc(G , THE_path)
@@ -193,12 +96,20 @@ def index():
             folium.PolyLine(locations=route_coords, color="blue", weight=5, opacity=0.8).add_to(m)
 
             for place, (lat, lon) in places.items():
-                if place == start:
+                is_start = place == start and start != "custom"
+                is_stop = place == stop and stop != "custom"
+
+                if is_start:
                     folium.Marker([lat, lon], popup=place, tooltip=place, icon=folium.Icon(color="green")).add_to(m)
-                elif place == stop:
+                elif is_stop:
                     folium.Marker([lat, lon], popup=place, tooltip=place, icon=folium.Icon(color="red")).add_to(m)
                 else:
                     folium.Marker([lat, lon], popup=place, tooltip=place).add_to(m)
+
+            if start == "custom":
+                folium.Marker(start_point, popup="Custom Start", tooltip="Custom Start", icon=folium.Icon(color="green")).add_to(m)
+            if stop == "custom":
+                folium.Marker(end_point, popup="Custom Stop", tooltip="Custom Stop", icon=folium.Icon(color="red")).add_to(m)
 
             html_text = f"""
             <div style="position: fixed;
@@ -207,19 +118,19 @@ def index():
                         font-family: serif; font-weight: bold; padding: 10px;">
                 <p>Start is {start}</p>
                 <p>Goal is {stop}</p>
-                <p>Distance is {path_distance:.2f}m at depth {depth_of_the_search}</p>
+                <p>Distance is {path_distance:.2f}m</p>
                 <p>ETA is {time}</p>
             </div>
             """
             m.get_root().html.add_child(folium.Element(html_text))
 
             map_html = m.get_root().render()
-            return render_template("index.html", places=places.keys(), algorithms=algorithms, map_html=map_html, start=start, stop=stop, algorithm=algorithm, speed=speed)
+            return render_template("index.html", places=places.keys(), places_json=places_json, map_html=map_html, start=start, stop=stop, speed=speed)
         else:
-            error_msg = f"No path found from {start} to {stop} using {algorithm}."
-            return render_template("index.html", places=places.keys(), algorithms=algorithms, error=error_msg)
+            error_msg = f"No path found from {start} to {stop}."
+            return render_template("index.html", places=places.keys(), places_json=places_json, error=error_msg)
 
-    return render_template("index.html", places=places.keys(), algorithms=algorithms)
+    return render_template("index.html", places=places.keys(), places_json=places_json)
 
 if __name__ == "__main__":
     app.run(debug=True)
