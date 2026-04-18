@@ -276,12 +276,16 @@
                     const latlng = [lat, lng];
 
                     startMarker.setLatLng(latlng);
-                    map.panTo(latlng);
+                    map.setView(latlng, 15);
 
                     document.getElementById('start').value = 'custom';
                     updateHiddenInputs();
                 }, function(error) {
-                    alert("تعذر الحصول على الموقع الحالي. يرجى التأكد من تفعيل خدمات الموقع.");
+                    alert("تعذر الحصول على الموقع الحالي بدقة. يرجى التأكد من تفعيل خدمات الموقع وإعطاء الإذن.");
+                }, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
                 });
             } else {
                 alert("المتصفح الخاص بك لا يدعم تحديد الموقع.");
