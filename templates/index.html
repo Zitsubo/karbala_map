@@ -139,7 +139,12 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Start Point -->
                             <div class="space-y-2">
-                                <label class="text-sm font-bold text-on-surface-variant mr-1">نقطة البداية (Start)</label>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="text-sm font-bold text-on-surface-variant mr-1">نقطة البداية (Start)</label>
+                                    <button type="button" id="btn-current-location" class="text-xs text-primary font-bold hover:underline flex items-center gap-1">
+                                        <span class="material-symbols-outlined" style="font-size: 14px;">my_location</span> تحديد موقعي الحالي
+                                    </button>
+                                </div>
                                 <div class="relative">
                                     <select name="start" id="start" required class="w-full bg-surface-container-low border-none rounded-DEFAULT px-4 py-4 focus:ring-2 focus:ring-primary/20 transition-all appearance-none text-on-surface">
                                         <option value="" disabled {% if not start %}selected{% endif %}>-- اختيار الموقع --</option>
@@ -260,6 +265,27 @@
                 map.panTo(latlng);
             }
             updateHiddenInputs();
+        });
+
+        // Current location logic
+        document.getElementById('btn-current-location').addEventListener('click', function() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const latlng = [lat, lng];
+
+                    startMarker.setLatLng(latlng);
+                    map.panTo(latlng);
+
+                    document.getElementById('start').value = 'custom';
+                    updateHiddenInputs();
+                }, function(error) {
+                    alert("تعذر الحصول على الموقع الحالي. يرجى التأكد من تفعيل خدمات الموقع.");
+                });
+            } else {
+                alert("المتصفح الخاص بك لا يدعم تحديد الموقع.");
+            }
         });
 
         // initial sync if values exist
