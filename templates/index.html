@@ -1,127 +1,287 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html class="dark" dir="rtl" lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>خريطة كربلاء التفاعلية</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#56ffa8",
+                        "primary-fixed-dim": "#00e38b",
+                        "error-container": "#93000a",
+                        "tertiary": "#fffaff",
+                        "inverse-on-surface": "#303031",
+                        "outline": "#849587",
+                        "inverse-primary": "#006d40",
+                        "on-tertiary-fixed-variant": "#7000a7",
+                        "surface-dim": "#121314",
+                        "tertiary-container": "#f3d5ff",
+                        "secondary-fixed": "#9cf0ff",
+                        "background": "#121314",
+                        "surface-bright": "#39393a",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed": "#f5d9ff",
+                        "on-primary": "#00391f",
+                        "tertiary-fixed-dim": "#e5b4ff",
+                        "surface-container": "#1f2021",
+                        "on-primary-fixed-variant": "#00522f",
+                        "surface-container-highest": "#343536",
+                        "secondary-fixed-dim": "#00daf3",
+                        "on-secondary-fixed-variant": "#004f58",
+                        "on-background": "#e4e2e3",
+                        "on-surface": "#e4e2e3",
+                        "on-primary-container": "#007143",
+                        "primary-container": "#00ff9d",
+                        "surface-container-high": "#292a2b",
+                        "surface": "#121314",
+                        "on-primary-fixed": "#002110",
+                        "surface-container-low": "#1b1c1d",
+                        "on-tertiary": "#4f0077",
+                        "on-secondary-container": "#00616d",
+                        "on-secondary": "#00363d",
+                        "surface-container-lowest": "#0d0e0f",
+                        "on-error-container": "#ffdad6",
+                        "outline-variant": "#3b4a3f",
+                        "on-surface-variant": "#b9cbbc",
+                        "on-tertiary-container": "#9900e2",
+                        "on-error": "#690005",
+                        "secondary-container": "#00e3fd",
+                        "on-secondary-fixed": "#001f24",
+                        "primary": "#f4fff3",
+                        "inverse-surface": "#e4e2e3",
+                        "surface-tint": "#00e38b",
+                        "secondary": "#bdf4ff",
+                        "on-tertiary-fixed": "#30004b",
+                        "surface-variant": "#343536"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0px",
+                        "lg": "0px",
+                        "xl": "0px",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Space Grotesk"],
+                        "label": ["Space Grotesk"]
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background-color: #121314;
+            background-image:
+                linear-gradient(rgba(0, 255, 157, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 157, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            position: relative;
+            overflow-x: hidden;
+            min-height: max(884px, 100dvh);
         }
-        h1 {
-            color: #333;
+
+        /* Scanline Overlay */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            z-index: 100;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
         }
-        form {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-        label {
-            font-weight: bold;
-            color: #555;
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(0, 255, 157, 0.7);
         }
-        select, input[type="number"] {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
+
+        .glow-border {
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.15);
         }
-        button {
-            background-color: #28a745;
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
+
+        .scanning-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-        button:hover {
-            background-color: #218838;
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; border-color: rgba(0, 255, 157, 1); }
+            50% { opacity: 0.5; border-color: rgba(0, 255, 157, 0.3); }
         }
+
         #picker-map {
             width: 100%;
             height: 300px;
-            border-radius: 4px;
-            margin-top: 10px;
-            margin-bottom: 20px;
         }
-        .map-container {
-            margin-top: 30px;
-            width: 100%;
-            max-width: 1000px;
-            height: 600px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .error {
-            color: red;
-            font-weight: bold;
-            margin-top: 10px;
+
+        .leaflet-container {
+            background-color: #0d0e0f !important;
+            filter: grayscale(100%) contrast(120%) hue-rotate(120deg) brightness(80%) sepia(100%) saturate(300%) hue-rotate(90deg);
         }
     </style>
 </head>
-<body>
-
-    <h1>خريطة كربلاء التفاعلية</h1>
-
-    <form method="POST" action="/" id="map-form">
-        <label for="start">نقطة البداية (Start):</label>
-        <select name="start" id="start" required>
-            <option value="" disabled {% if not start %}selected{% endif %}>اختر نقطة البداية...</option>
-            <option value="custom" {% if start == "custom" %}selected{% endif %}>موقع مخصص (Custom Location)</option>
-            {% for p in places %}
-                <option value="{{ p }}" {% if start == p %}selected{% endif %}>{{ p }}</option>
-            {% endfor %}
-        </select>
-
-        <label for="stop">نقطة النهاية (Stop):</label>
-        <select name="stop" id="stop" required>
-            <option value="" disabled {% if not stop %}selected{% endif %}>اختر نقطة النهاية...</option>
-            <option value="custom" {% if stop == "custom" %}selected{% endif %}>موقع مخصص (Custom Location)</option>
-            {% for p in places %}
-                <option value="{{ p }}" {% if stop == p %}selected{% endif %}>{{ p }}</option>
-            {% endfor %}
-        </select>
-
-        <div id="picker-map"></div>
-
-        <input type="hidden" name="start_lat" id="start_lat" value="">
-        <input type="hidden" name="start_lon" id="start_lon" value="">
-        <input type="hidden" name="stop_lat" id="stop_lat" value="">
-        <input type="hidden" name="stop_lon" id="stop_lon" value="">
-
-        <label for="speed">السرعة كم/ساعة (Speed km/h):</label>
-        <input type="number" name="speed" id="speed" value="{{ speed if speed else 50 }}" min="1" required>
-
-        <button type="submit">ارسم الخريطة (Draw Map)</button>
-    </form>
-
-    {% if error %}
-        <div class="error">{{ error }}</div>
-    {% endif %}
-
-    {% if map_html %}
-        <div class="map-container">
-            <iframe srcdoc="{{ map_html | escape }}" width="100%" height="100%" frameborder="0"></iframe>
+<body class="text-on-surface font-body min-h-screen pb-24">
+    <!-- TopAppBar -->
+    <header class="fixed top-0 w-full rounded-none border-b border-[#00FF9D]/10 bg-[#121314] z-50 flex justify-between items-center px-6 py-4 shadow-[0_0_20px_rgba(0,255,157,0.05)]">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[#00FF9D]" data-icon="terminal">terminal</span>
+            <h1 class="text-xl font-bold text-[#00FF9D] tracking-widest font-headline uppercase">KARBALA_NET.OS</h1>
         </div>
-    {% endif %}
+        <div class="flex items-center gap-4">
+            <span class="text-[10px] text-[#00FF9D]/60 font-mono tracking-tighter">SECURED_LINK: ENABLED</span>
+        </div>
+    </header>
+
+    <main class="pt-24 px-6 max-w-2xl mx-auto space-y-8">
+        <!-- Header Section -->
+        <section class="space-y-2">
+            <div class="flex justify-between items-baseline">
+                <span class="text-[10px] font-mono text-[#00FF9D]/50 uppercase tracking-[0.3em]">System.initialize()</span>
+            </div>
+            <h2 class="text-4xl font-extrabold text-on-surface glow-text tracking-tighter leading-tight">
+                خريطة كربلاء التفاعلية
+            </h2>
+            <p class="text-on-surface-variant text-sm font-mono opacity-80">
+                // تفويض الوصول: الواجهة العصبية للملاحة الحضرية
+            </p>
+        </section>
+
+        {% if error %}
+        <div class="p-4 border border-error bg-error-container text-error font-mono text-sm glow-border">
+            [ERROR] {{ error }}
+        </div>
+        {% endif %}
+
+        <!-- Command Input Form -->
+        <form method="POST" action="/" id="map-form" class="space-y-6 bg-surface-container-low p-6 border-r-2 border-[#00FF9D]/30 relative overflow-hidden">
+            <!-- Decorative corner elements -->
+            <div class="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#00FF9D]/40"></div>
+            <div class="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#00FF9D]/40"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Input Group 1 -->
+                <div class="space-y-2">
+                    <label class="text-[11px] font-mono text-[#00FF9D] uppercase tracking-widest flex items-center gap-2">
+                        <span class="text-[8px]">_</span> نقطة البداية (Start)
+                    </label>
+                    <div class="relative">
+                        <select name="start" id="start" required class="w-full bg-surface-container-lowest border-0 text-on-surface p-4 font-mono focus:ring-1 focus:ring-primary-container appearance-none glow-border">
+                            <option value="" disabled {% if not start %}selected{% endif %}>-- اختيار الموقع --</option>
+                            <option value="custom" {% if start == "custom" %}selected{% endif %}>موقع مخصص (Custom Location)</option>
+                            {% for p in places %}
+                                <option value="{{ p }}" {% if start == p %}selected{% endif %}>{{ p }}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary-container pointer-events-none" data-icon="expand_more">expand_more</span>
+                    </div>
+                </div>
+
+                <!-- Input Group 2 -->
+                <div class="space-y-2">
+                    <label class="text-[11px] font-mono text-[#00FF9D] uppercase tracking-widest flex items-center gap-2">
+                        <span class="text-[8px]">_</span> نقطة النهاية (Stop)
+                    </label>
+                    <div class="relative">
+                        <select name="stop" id="stop" required class="w-full bg-surface-container-lowest border-0 text-on-surface p-4 font-mono focus:ring-1 focus:ring-primary-container appearance-none glow-border">
+                            <option value="" disabled {% if not stop %}selected{% endif %}>-- اختيار الموقع --</option>
+                            <option value="custom" {% if stop == "custom" %}selected{% endif %}>موقع مخصص (Custom Location)</option>
+                            {% for p in places %}
+                                <option value="{{ p }}" {% if stop == p %}selected{% endif %}>{{ p }}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary-container pointer-events-none" data-icon="expand_more">expand_more</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Picker Map -->
+            <div class="space-y-2">
+                <label class="text-[11px] font-mono text-on-surface-variant uppercase tracking-widest">محدد الخريطة اليدوي (SCANNING...)</label>
+                <div class="w-full bg-surface-container-lowest border border-[#00FF9D]/20 relative overflow-hidden scanning-pulse glow-border">
+                    <div id="picker-map"></div>
+                    <div class="absolute inset-0 pointer-events-none border-2 border-[#00FF9D]/10 z-[400]"></div>
+                </div>
+            </div>
+
+            <input type="hidden" name="start_lat" id="start_lat" value="">
+            <input type="hidden" name="start_lon" id="start_lon" value="">
+            <input type="hidden" name="stop_lat" id="stop_lat" value="">
+            <input type="hidden" name="stop_lon" id="stop_lon" value="">
+
+            <!-- Speed Input -->
+            <div class="space-y-2">
+                <label class="text-[11px] font-mono text-[#00FF9D] uppercase tracking-widest">السرعة كم/ساعة (Speed km/h)</label>
+                <div class="flex items-center bg-surface-container-lowest p-1 glow-border">
+                    <input type="number" name="speed" id="speed" value="{{ speed if speed else 50 }}" min="1" required class="flex-1 bg-transparent border-0 text-2xl font-mono text-primary-container focus:ring-0 text-center" placeholder="000"/>
+                    <div class="px-4 py-2 border-r border-[#00FF9D]/10 text-on-surface-variant text-[10px] font-mono">KMH_VAL</div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full group relative overflow-hidden bg-[#00FF9D] text-[#00391f] py-5 font-bold tracking-widest text-lg uppercase transition-all hover:bg-white hover:shadow-[0_0_30px_rgba(0,255,157,0.4)] active:scale-[0.98] mt-4">
+                <div class="flex items-center justify-center gap-3">
+                    <span>ارسم الخريطة (Draw Map)</span>
+                    <span class="material-symbols-outlined group-hover:translate-x-[-4px] transition-transform" data-icon="terminal">terminal</span>
+                </div>
+                <div class="absolute top-0 right-0 p-1 text-[8px] opacity-30">EXECUTE</div>
+            </button>
+        </form>
+
+        <!-- Main Map Placeholder -->
+        {% if map_html %}
+        <section class="space-y-4 pt-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 bg-[#00FF9D] animate-pulse"></span>
+                    <h3 class="font-mono text-xs tracking-widest text-primary-fixed-dim uppercase">SYSTEM_MAP_VIEW</h3>
+                </div>
+                <div class="flex gap-2">
+                    <span class="px-2 py-0.5 bg-surface-container-highest text-[9px] font-mono">v4.0.2</span>
+                    <span class="px-2 py-0.5 bg-surface-container-highest text-[9px] font-mono text-[#00FF9D]">LIVE</span>
+                </div>
+            </div>
+
+            <div class="h-[600px] w-full bg-surface-container relative overflow-hidden glow-border border border-[#00FF9D]/30">
+                <iframe srcdoc="{{ map_html | escape }}" width="100%" height="100%" frameborder="0" class="relative z-10" style="filter: invert(1) hue-rotate(180deg) brightness(80%) contrast(120%);"></iframe>
+
+                <!-- HUD Corner Readouts -->
+                <div class="absolute top-4 right-4 p-4 bg-surface/80 backdrop-blur-md border-r border-[#00FF9D]/30 font-mono text-[9px] space-y-1 z-20 pointer-events-none">
+                    <div class="text-[#00FF9D]">CONNECTION: STABLE</div>
+                    <div class="text-on-surface-variant">PACKETS: 102.4kb/s</div>
+                    <div class="text-on-surface-variant">NODE_ID: KRB-09X</div>
+                </div>
+                <div class="absolute bottom-4 left-4 p-4 bg-surface/80 backdrop-blur-md border-l border-[#00FF9D]/30 font-mono text-[9px] space-y-1 text-left z-20 pointer-events-none">
+                    <div class="text-[#00FF9D]">UPTIME: 14:02:11:88</div>
+                    <div class="text-on-surface-variant">ENCRYPTION: AES-256</div>
+                    <div class="text-on-surface-variant">TEMP: 24.1C</div>
+                </div>
+
+                <!-- Overlay Grid Overlay -->
+                <div class="absolute inset-0 pointer-events-none opacity-20 z-30" style="background-image: radial-gradient(circle, #00FF9D 1px, transparent 1px); background-size: 40px 40px;"></div>
+            </div>
+        </section>
+        {% endif %}
+    </main>
 
     <script>
         const places = {{ places_json | safe }};
