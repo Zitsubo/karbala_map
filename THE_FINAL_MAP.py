@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, render_template_string
 import osmnx as ox
 import networkx as nx
-import folium
 import json
 # made py ZITSUBO 2024/11/13
 # my search algorithms for whatever reason
@@ -91,46 +90,20 @@ def index():
             path_distance = path_distance_calc(G , THE_path)
             time = ETA(G, THE_path, speed)
 
-            m = folium.Map(location=[start_point[0], start_point[1]], zoom_start=13, tiles="CartoDB positron")
+            route_coords = [[G.nodes[node]['y'], G.nodes[node]['x']] for node in THE_path]
+            route_coords_json = json.dumps(route_coords)
 
-            # route plot
-            route_coords = [(G.nodes[node]['y'], G.nodes[node]['x']) for node in THE_path]
-            folium.PolyLine(locations=route_coords, color="blue", weight=5, opacity=0.8).add_to(m)
-
-            for place, (lat, lon) in places.items():
-                is_start = place == start and start != "custom"
-                is_stop = place == stop and stop != "custom"
-
-                if is_start:
-                    folium.Marker([lat, lon], popup=place, tooltip=place, icon=folium.Icon(color="green")).add_to(m)
-                elif is_stop:
-                    folium.Marker([lat, lon], popup=place, tooltip=place, icon=folium.Icon(color="red")).add_to(m)
-                else:
-                    folium.Marker([lat, lon], popup=place, tooltip=place).add_to(m)
-
-            if start == "custom":
-                folium.Marker(start_point, popup="Custom Start", tooltip="Custom Start", icon=folium.Icon(color="green")).add_to(m)
-            if stop == "custom":
-                folium.Marker(end_point, popup="Custom Stop", tooltip="Custom Stop", icon=folium.Icon(color="red")).add_to(m)
-
-            start_name = "موقع مخصص" if start == "custom" else start
-            stop_name = "موقع مخصص" if stop == "custom" else stop
-
-            html_text = f"""
-            <div style="position: fixed;
-                        top: 20px; right: 20px; width: auto; max-width: 250px; height: auto;
-                        background-color: rgba(255, 255, 255, 0.95); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index:9999; font-size: 13px;
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 15px; direction: rtl;">
-                <p style="margin: 0 0 5px 0;"><b>من:</b> {start_name}</p>
-                <p style="margin: 0 0 5px 0;"><b>إلى:</b> {stop_name}</p>
-                <p style="margin: 0 0 5px 0; color: #005ab2;"><b>المسافة:</b> {path_distance:.2f} م</p>
-                <p style="margin: 0;"><b>الوقت المقدر:</b> {time}</p>
-            </div>
-            """
-            m.get_root().html.add_child(folium.Element(html_text))
-
-            map_html = m.get_root().render()
-            return render_template("index.html", places=places.keys(), places_json=places_json, map_html=map_html, start=start, stop=stop, speed=speed)
+            return render_template(
+                "index.html",
+                places=places.keys(),
+                places_json=places_json,
+                route_coords_json=route_coords_json,
+                start=start,
+                stop=stop,
+                speed=speed,
+                path_distance=path_distance,
+                time=time
+            )
         else:
             error_msg = f"No path found from {start} to {stop}."
             return render_template("index.html", places=places.keys(), places_json=places_json, error=error_msg)
