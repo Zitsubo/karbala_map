@@ -106,45 +106,22 @@
 
     <!-- Main Content Canvas -->
     <main class="container mx-auto px-4 pt-24 max-w-6xl">
+        <!-- Hero Section Asymmetry -->
         <section class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-            <!-- Left Side: Main Interactive Map -->
-            <div class="lg:col-span-7 order-2 lg:order-1 h-full">
-                <div class="bg-surface-container-lowest rounded-xl shadow-[0_20px_50px_rgba(0,123,255,0.08)] overflow-hidden relative group p-2 h-full min-h-[600px]">
-                    <div id="main-map" class="h-full w-full relative rounded-lg overflow-hidden" style="min-height: 600px;"></div>
-
-                    {% if route_coords_json %}
-                    <!-- Modern Floating Info Overlay -->
-                    <div class="absolute top-6 right-6 bg-white/95 backdrop-blur-md border border-slate-100 rounded-xl p-5 shadow-[0_10px_30px_rgba(0,0,0,0.1)] z-[1000] w-64">
-                        <div class="space-y-4">
-                            <div>
-                                <span class="text-xs text-slate-500 font-bold block mb-1">نقطة البداية</span>
-                                <div class="font-bold text-slate-800 text-sm truncate">{% if start == 'custom' %}موقع مخصص{% else %}{{ start }}{% endif %}</div>
-                            </div>
-                            <div class="h-px w-full bg-slate-100"></div>
-                            <div>
-                                <span class="text-xs text-slate-500 font-bold block mb-1">نقطة النهاية</span>
-                                <div class="font-bold text-slate-800 text-sm truncate">{% if stop == 'custom' %}موقع مخصص{% else %}{{ stop }}{% endif %}</div>
-                            </div>
-                            <div class="h-px w-full bg-slate-100"></div>
-                            <div class="flex justify-between items-end">
-                                <div>
-                                    <span class="text-xs text-slate-500 font-bold block mb-1">المسافة</span>
-                                    <div class="font-bold text-primary text-lg">{{ "%.2f"|format(path_distance) }} م</div>
-                                </div>
-                                <div class="text-right">
-                                    <span class="text-xs text-slate-500 font-bold block mb-1">وقت الوصول</span>
-                                    <div class="font-bold text-slate-800 text-sm">{{ time }}</div>
-                                </div>
-                            </div>
-                        </div>
+            {% if map_html %}
+            <!-- Left Side: Generated Interactive Map Visual (The "Canvas") -->
+            <div class="lg:col-span-7 order-2 lg:order-1">
+                <div class="bg-surface-container-lowest rounded-xl shadow-[0_20px_50px_rgba(0,123,255,0.08)] overflow-hidden relative group p-2">
+                    <div class="h-[600px] w-full relative rounded-lg overflow-hidden">
+                        <iframe srcdoc="{{ map_html | escape }}" width="100%" height="100%" frameborder="0" class="relative z-10"></iframe>
                     </div>
-                    {% endif %}
                 </div>
             </div>
+            {% endif %}
 
             <!-- Right Side: Planning Form (The "Majlis" Card) -->
-            <div class="lg:col-span-5 order-1 lg:order-2">
+            <div class="lg:col-span-{% if map_html %}5{% else %}12{% endif %} order-1 lg:order-2">
                 <div class="bg-surface-container-lowest rounded-xl p-8 shadow-[0_30px_60px_rgba(0,0,0,0.05)] border border-white/20">
                     <div class="mb-8">
                         <span class="text-secondary font-bold text-sm tracking-widest block mb-2 opacity-80">التخطيط للرحلة</span>
@@ -191,10 +168,12 @@
                             </div>
                         </div>
 
-                        <!-- Instructions -->
-                        <div class="p-4 bg-surface-container-low rounded-lg border border-outline-variant/30 flex items-start gap-3">
-                            <span class="material-symbols-outlined text-primary">info</span>
-                            <p class="text-sm text-on-surface-variant">قم بسحب العلامات الخضراء والحمراء على الخريطة لتحديد نقطة بداية ونهاية مخصصة.</p>
+                        <!-- Map Picker Preview -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-on-surface-variant mr-1">تحديد سريع على الخريطة</label>
+                            <div class="w-full rounded-DEFAULT bg-surface-container-high relative overflow-hidden shadow-sm">
+                                <div id="picker-map"></div>
+                            </div>
                         </div>
 
                         <input type="hidden" name="start_lat" id="start_lat" value="">
@@ -226,18 +205,10 @@
         const places = {{ places_json | safe }};
         const defaultCenter = [32.6160, 44.0316]; // Karbala Center
 
-        const map = L.map('main-map').setView(defaultCenter, 13);
+        const map = L.map('picker-map').setView(defaultCenter, 13);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
         }).addTo(map);
-
-        {% if route_coords_json %}
-        const routeCoords = {{ route_coords_json | safe }};
-        if (routeCoords && routeCoords.length > 0) {
-            const polyline = L.polyline(routeCoords, {color: '#005ab2', weight: 5, opacity: 0.8}).addTo(map);
-            map.fitBounds(polyline.getBounds(), {padding: [50, 50]});
-        }
-        {% endif %}
 
         const startIcon = new L.Icon({
           iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
