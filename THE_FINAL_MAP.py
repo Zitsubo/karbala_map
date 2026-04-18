@@ -4,6 +4,8 @@ import networkx as nx
 import folium
 import json
 # made py ZITSUBO 2024/11/13
+# my search algorithms for whatever reason
+
 app = Flask(__name__)
 
 print("Loading graph...")
