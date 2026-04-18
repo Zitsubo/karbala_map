@@ -1,7 +1,6 @@
 import osmnx as ox
 import networkx as nx
 import matplotlib.pyplot as plt
-import folium
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 import heapq
@@ -194,35 +193,36 @@ if THE_path:
     while choice == "":
         choice = prompt("Draw The Map? " , completer=choice_completer)
     if choice == "yes":
-        m = folium.Map(location=[start_point[0], start_point[1]], zoom_start=13, tiles="CartoDB positron")
-
-        # route plot
-        route_coords = [(G.nodes[node]['y'], G.nodes[node]['x']) for node in THE_path]
-        folium.PolyLine(locations=route_coords, color="blue", weight=5, opacity=0.8).add_to(m)
+        fig, ax = plt.subplots(figsize=(12, 12))
+        ox.plot_graph(G, ax=ax, node_size=0, edge_linewidth=0.5, bgcolor="white", show=False, close=False)
+                                                # route plot
+        ox.plot_graph_route(G, THE_path , route_linewidth=1, node_size=-5, ax=ax, route_alpha=0.7, show=False, close=False)
 
         for place, (lat, lon) in places.items():
-            if place == start:
-                folium.Marker([lat, lon], popup=place, tooltip=place, icon=folium.Icon(color="green")).add_to(m)
-            elif place == stop:
-                folium.Marker([lat, lon], popup=place, tooltip=place, icon=folium.Icon(color="red")).add_to(m)
-            else:
-                folium.Marker([lat, lon], popup=place, tooltip=place).add_to(m)
+            node = ox.distance.nearest_nodes(G, lon, lat)
+            x, y = G.nodes[node]['x'], G.nodes[node]['y']
+            ax.plot(x, y, 'o', color='black', markersize=5, zorder=5)
+            ax.text(x + 0.001, y, place, fontsize=10, color='darkred', fontstyle = "italic" , fontfamily = 'serif' ,  ha='left', zorder=9)
 
-        html_text = f"""
-        <div style="position: fixed;
-                    bottom: 50px; left: 50px; width: 350px; height: 160px;
-                    background-color: white; border:2px solid black; z-index:9999; font-size:16px;
-                    font-family: serif; font-weight: bold; padding: 10px;">
-            <p>Start is {start}</p>
-            <p>Goal is {stop}</p>
-            <p>Distance is {path_distance:.2f}m at depth {depth_of_the_search}</p>
-            <p>ETA is {time}</p>
-        </div>
-        """
-        m.get_root().html.add_child(folium.Element(html_text))
-
-        m.save("Karbala-map.html")
-        print("Map saved as Karbala-map.html")
+        for i in range(len(THE_path) - 1):
+            u = THE_path[i]
+            v = THE_path[i + 1]
+            x_start, y_start = G.nodes[u]['x'], G.nodes[u]['y']
+            x_end, y_end = G.nodes[v]['x'], G.nodes[v]['y']
+            ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start), arrowprops=dict(facecolor='black', edgecolor='black', arrowstyle='->', lw=0.30))
+        plt.figtext(
+        0.05, 0.95,  # text position
+        f"Start is {start}\nGoal is {stop}\nDistance is {path_distance:.2f}m at depth {depth_of_the_search}\n ETA is {time}\n ",
+        fontsize=20,  
+        color="Black",
+        fontweight="bold",
+        fontfamily="serif",
+        ha="left",
+        va="top"
+    )
+        plt.show()
+        plt.savefig("Karbala-map.png" , format = "png",
+        dpi = 600 )
     elif choice == "no":
         if os.name == 'nt':
             os.system("cls")
